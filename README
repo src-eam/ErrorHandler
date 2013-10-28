@@ -1,0 +1,8 @@
+Запуск:
+gcc -std=c99 ./errorHandler.c -o errorHandler
+./errorHandler /nameCatalog/
+
+Для эмуляции ошибок надо изменить в коде ERROR_EMUL на число >0 AND <=1
+
+Evgeny Makarov, KB-401
+2013.
