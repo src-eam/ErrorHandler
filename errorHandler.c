@@ -4,6 +4,7 @@
 #include <limits.h>
 #include <dirent.h>
 #include <time.h>
+#include <string.h>
 
 #define SIZE_NUMBERS 10		//первоначальный размер выделения памяти под массив чисел
 #define REALLOC_SIZE_NUMBERS 10 //на сколько будет увеличиваться выделение памяти при вызове realloc
@@ -54,7 +55,8 @@ unsigned int *readFile(FILE *fp, unsigned int *numbers, size_t *size_numbers,
 	int i = 0;
 	size_t j = *index;
 	char line[11];
-	while (!feof(fp) && fp != NULL && (wrapper_fread(byte, sizeof(char), 1, fp) == 1)) {
+	while (!feof(fp) && fp != NULL
+			&& (wrapper_fread(byte, sizeof(char), 1, fp) == 1)) {
 		;
 		if (byte[0] >= '0' && byte[0] <= '9') {
 			line[i] = byte[0];
@@ -72,7 +74,7 @@ unsigned int *readFile(FILE *fp, unsigned int *numbers, size_t *size_numbers,
 			(*index)++;
 			if (*index == *size_numbers) {
 				(*size_numbers) += REALLOC_SIZE_NUMBERS;
-				numbers = (unsigned int) wrapper_realloc(numbers,
+				numbers = (unsigned int*) wrapper_realloc(numbers,
 						(*size_numbers) * sizeof(unsigned int));
 				if (!numbers) {
 					fprintf(stderr,
@@ -94,7 +96,7 @@ unsigned int *readFile(FILE *fp, unsigned int *numbers, size_t *size_numbers,
 		(*index)++;
 		if (*index == *size_numbers) {
 			(*size_numbers) += REALLOC_SIZE_NUMBERS;
-			numbers = (unsigned int)wrapper_realloc(numbers,
+			numbers = (unsigned int*) wrapper_realloc(numbers,
 					(*size_numbers) * sizeof(unsigned int));
 			if (!numbers) {
 				fprintf(stderr,
@@ -124,7 +126,7 @@ void sort_bubble(unsigned int *numbers, size_t n) {
 
 int main(int argc, char *argv[]) {
 	srand(time(NULL));
-	if(argc < 2){
+	if (argc < 2) {
 		fprintf(stderr, "Ошибка. Каталог не задан.\n");
 		return 1;
 	}
@@ -137,7 +139,12 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "Ошибка при распределении памяти.(calloc)\n");
 		return 1;
 	}
-	int code = 1;
+	int len_path = strlen(argv[1]);
+	if (argv[1][len_path - 1] != '/') {
+		argv[1][len_path] = '/';
+		argv[1][len_path + 1] = '\0';
+		len_path++;
+	}
 	DIR *dir;
 	struct dirent *ent;
 	dir = wrapper_opendir(argv[1]);
@@ -153,7 +160,15 @@ int main(int argc, char *argv[]) {
 	int closeFile = 0;
 	while ((ent = wrapper_readdir(dir))) {
 		if ((int) ent->d_type == 8) {
-			strncpy(filename, argv[1], PATH_MAX);
+			filename = wrapper_calloc(PATH_MAX, sizeof(char));
+			if (!filename) {
+				fprintf(stderr, "Ошибка распределения памяти. \n");
+				if (index == 0)
+					return 1;
+				else
+					break;
+			}
+			strncpy(filename, argv[1], len_path);
 			strcat(filename, ent->d_name);
 			fp = fopen(filename, "rb");
 			if (fp == NULL) {
@@ -172,6 +187,7 @@ int main(int argc, char *argv[]) {
 					numbers = prom;
 				}
 			}
+			free(filename);
 		}
 	}
 	int close = wrapper_closedir(dir);
