@@ -57,7 +57,6 @@ unsigned int *readFile(FILE *fp, unsigned int *numbers, size_t *size_numbers,
 	char line[11];
 	while (!feof(fp) && fp != NULL
 			&& (wrapper_fread(byte, sizeof(char), 1, fp) == 1)) {
-		;
 		if (byte[0] >= '0' && byte[0] <= '9') {
 			line[i] = byte[0];
 			i++;
@@ -148,7 +147,7 @@ int main(int argc, char *argv[]) {
 	DIR *dir;
 	struct dirent *ent;
 	dir = wrapper_opendir(argv[1]);
-	if (!dir) {
+	if (!dir || (len_path > (PATH_MAX - 2))) {
 		fprintf(stderr, "Ошибка открытия %s каталога.\n", argv[1]);
 		return 1;
 	}
